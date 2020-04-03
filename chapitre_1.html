@@ -180,8 +180,44 @@ int main() {
 <li>La composante rouge va du noir au maximum de gauche à droite et le vert va du noir en bas, jusqu'au maximum en haut. Le rouge et le vert ensemble forment du jaune, donc on doit s'attendre à ce que coin supérieur droit soit jaune.</li>
 </ol>
 <p>Parce que le programme n'écrit pas directement dans un fichier mais dans sa sortie standard, nous avons besoin de rédiger celle-ci dans un fichier.
-Généralement, c'est fait depuis la ligne de commande en utilisant le chevron '&gt;' pour rediriger la sortie vers un fichier :
-<code>build\Release\inOneWeekend.exe &gt; image.ppm</code></p>
+Généralement, c'est fait depuis la ligne de commande en utilisant le chevron '&gt;' pour rediriger la sortie vers un fichier :</p>
+<p><code>build\Release\inOneWeekend.exe &gt; image.ppm</code></p>
+<p>sous Windows, et pour Mac &amp; Linux :</p>
+<p><code>build/inOneWeekend &gt; image.ppm</code></p>
+<p>Nous pouvons ouvrir le fichier ainsi créé (avec 'ToyViewer' sur mon Mac par exemple) et nous obtenons le résultat suivant :</p>
+<p><img src="img/first_ppm.png" alt="Format PPM" /></p>
+<p>Hooray! C'est un peu le 'hello world' en graphique. Si votre image ne ressemble pas à ça, ouvrez le fichier avec un éditeur de texte et regardez à quoi il ressemble. Il devrait commencer par :</p>
+<pre><code>P3
+200 100
+255
+0 253 51
+1 253 51
+2 253 51
+3 253 51
+5 253 51
+6 253 51
+7 253 51
+8 253 51
+</code></pre>
+<p>Si ce n'est pas le cas, vous avez peut-être des nouvelles lignes ou quelque chose comme ça. </p>
+<p>Si vous voulez produire des formats autres que le PPM, je suis un fan de <code>stb_image.h</code> disponible sur Github.</p>
+<h2><a class="header" href="#ajouter-un-indicateur-de-progression" id="ajouter-un-indicateur-de-progression">Ajouter un indicateur de progression</a></h2>
+<p>Avant de continuer, ajoutons un indicateur de progression à notre sortie. C'est une façon pratique de suivre la progression d'un long rendu, et aussi une manière d'identifier un lancement bloqué à cause d'une boucle infinie ou d'un autre problème.</p>
+<p>Notre programme sort l'image via la sortie standard (<code>std::cout</code>), donc nous laissons ça et on affiche la progression plutôt via la sortie d'erreur (<code>std::cerr</code>) :</p>
+<pre><code class="language-cpp">for (int j = image_height-1; j &gt;= 0; --j) {
+    std::cerr &lt;&lt; &quot;\rScanlines remaining: &quot; &lt;&lt; j &lt;&lt; ' ' &lt;&lt; std::flush;
+    for (int i = 0; i &lt; image_width; ++i) {
+        auto r = double(i) / image_width;
+        auto g = double(j) / image_height;
+        auto b = 0.2;
+        int ir = static_cast&lt;int&gt;(255.999 * r);
+        int ig = static_cast&lt;int&gt;(255.999 * g);
+        int ib = static_cast&lt;int&gt;(255.999 * b);
+        std::cout &lt;&lt; ir &lt;&lt; ' ' &lt;&lt; ig &lt;&lt; ' ' &lt;&lt; ib &lt;&lt; '\n';
+    }
+}
+std::cerr &lt;&lt; &quot;\nDone.\n&quot;;
+</code></pre>
 
                     </main>
 
