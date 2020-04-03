@@ -238,6 +238,130 @@ Généralement, c'est fait depuis la ligne de commande en utilisant le chevron '
 std::cerr &lt;&lt; &quot;\nDone.\n&quot;;
 </code></pre>
 <h1><a class="header" href="#la-classe-vec3" id="la-classe-vec3">La classe <code>vec3</code></a></h1>
+<p>Quasiment tous les programmes graphiques utilisent une ou plusieurs classes pour stocker des vecteurs pour la géométrie et des couleurs. Dans beaucoup de ces systèmes, il s'agit de vecteur 4D (3D + une coordonnée homogène pour la géométrie ou + une composante 'alpha' de transparence pour les couleurs).</p>
+<p>Pour notre besoin, 3 coordonnées suffisent. Nous allons donc utiliser la classe <code>vec3</code> pour les couleurs, les positions, les directions, les décalages, etc. Certaines personnes n'aiment pas ça parce que cette méthode ne vous empêche pas de faire des choses stupides, comme ajouter une couleur et une position ensemble. C'est un bon point, mais nous allons choisir la voie du plus simple lorsque ce n'est pas expressement faux.</p>
+<p>Voici une implémentation possible de cette classe <code>vec3</code> :</p>
+<pre><code class="language-cpp">#include &lt;iostream&gt;
+
+class vec3 {
+    public:
+        vec3() : e{0,0,0} {}
+        vec3(double e0, double e1, double e2) : e{e0, e1, e2} {}
+
+        double x() const { return e[0]; }
+        double y() const { return e[1]; }
+        double z() const { return e[2]; }
+
+        vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); }
+        double operator[](int i) const { return e[i]; }
+        double&amp; operator[](int i) { return e[i]; }
+
+        vec3&amp; operator+=(const vec3 &amp;v) {
+            e[0] += v.e[0];
+            e[1] += v.e[1];
+            e[2] += v.e[2];
+            return *this;
+        }
+
+        vec3&amp; operator*=(const double t) {
+            e[0] *= t;
+            e[1] *= t;
+            e[2] *= t;
+            return *this;
+        }
+
+        vec3&amp; operator/=(const double t) {
+            return *this *= 1/t;
+        }
+
+        double length() const {
+            return sqrt(length_squared());
+        }
+
+        double length_squared() const {
+            return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
+        }
+
+        void write_color(std::ostream &amp;out) {
+            // Write the translated [0,255] value of each color component.
+            out &lt;&lt; static_cast&lt;int&gt;(255.999 * e[0]) &lt;&lt; ' '
+                &lt;&lt; static_cast&lt;int&gt;(255.999 * e[1]) &lt;&lt; ' '
+                &lt;&lt; static_cast&lt;int&gt;(255.999 * e[2]) &lt;&lt; '\n';
+        }
+
+    public:
+        double e[3];
+};
+</code></pre>
+<p>Nous utilisons des <code>double</code> ici, mais certains ray tracers fonctionnent avec des <code>float</code>. C'est selon votre propre goût. La seconde partie du fichier header contient des fonctions utilitaires relatives aux vecteurs :</p>
+<pre><code class="language-cpp">// vec3 Utility Functions
+
+inline std::ostream&amp; operator&lt;&lt;(std::ostream &amp;out, const vec3 &amp;v) {
+    return out &lt;&lt; v.e[0] &lt;&lt; ' ' &lt;&lt; v.e[1] &lt;&lt; ' ' &lt;&lt; v.e[2];
+}
+
+inline vec3 operator+(const vec3 &amp;u, const vec3 &amp;v) {
+    return vec3(u.e[0] + v.e[0], u.e[1] + v.e[1], u.e[2] + v.e[2]);
+}
+
+inline vec3 operator-(const vec3 &amp;u, const vec3 &amp;v) {
+    return vec3(u.e[0] - v.e[0], u.e[1] - v.e[1], u.e[2] - v.e[2]);
+}
+
+inline vec3 operator*(const vec3 &amp;u, const vec3 &amp;v) {
+    return vec3(u.e[0] * v.e[0], u.e[1] * v.e[1], u.e[2] * v.e[2]);
+}
+
+inline vec3 operator*(double t, const vec3 &amp;v) {
+    return vec3(t*v.e[0], t*v.e[1], t*v.e[2]);
+}
+
+inline vec3 operator*(const vec3 &amp;v, double t) {
+    return t * v;
+}
+
+inline vec3 operator/(vec3 v, double t) {
+    return (1/t) * v;
+}
+
+inline double dot(const vec3 &amp;u, const vec3 &amp;v) {
+    return u.e[0] * v.e[0]
+         + u.e[1] * v.e[1]
+         + u.e[2] * v.e[2];
+}
+
+inline vec3 cross(const vec3 &amp;u, const vec3 &amp;v) {
+    return vec3(u.e[1] * v.e[2] - u.e[2] * v.e[1],
+                u.e[2] * v.e[0] - u.e[0] * v.e[2],
+                u.e[0] * v.e[1] - u.e[1] * v.e[0]);
+}
+
+inline vec3 unit_vector(vec3 v) {
+    return v / v.length();
+}
+</code></pre>
+<p>Maintenant, nous pouvons changer notre fonction <code>main</code> pour l'utiliser :</p>
+<pre><code class="language-cpp">#include &quot;vec3.h&quot;
+
+#include &lt;iostream&gt;
+
+int main() {
+    const int image_width = 200;
+    const int image_height = 100;
+
+    std::cout &lt;&lt; &quot;P3\n&quot; &lt;&lt; image_width &lt;&lt; ' ' &lt;&lt; image_height &lt;&lt; &quot;\n255\n&quot;;
+
+    for (int j = image_height-1; j &gt;= 0; --j) {
+        std::cerr &lt;&lt; &quot;\rScanlines remaining: &quot; &lt;&lt; j &lt;&lt; ' ' &lt;&lt; std::flush;
+        for (int i = 0; i &lt; image_width; ++i) {
+            vec3 color(double(i)/image_width, double(j)/image_height, 0.2);
+            color.write_color(std::cout);
+        }
+    }
+
+    std::cerr &lt;&lt; &quot;\nDone.\n&quot;;
+}
+</code></pre>
 
                     </main>
 
