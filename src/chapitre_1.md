@@ -27,3 +27,15 @@ int main() {
     }
 }
 ```
+
+Il y a plusieurs choses à noter dans ce code :
+1. Les pixels sont écrits en lignes, de la gauche vers la droite.
+2. Les lignes sont écrites du haut vers le bas.
+3. Par convention, chaque composant RVB(rouge/vert/bleu ou RGB en anglais) a une valeur allant de 0.0 à 1.0. Nous assouplirons cette contrainte plus tard quand nous utiliserons une plage HDR (high dynamic range), sachant qu'avant de sortir une image HDR nous allons contraindre les valeurs dans l'intervale de zéro à un, donc ce code ne changera pas.
+4. La composante rouge va du noir au maximum de gauche à droite et le vert va du noir en bas, jusqu'au maximum en haut. Le rouge et le vert ensemble forment du jaune, donc on doit s'attendre à ce que coin supérieur droit soit jaune.
+
+Parce que le programme n'écrit pas directement dans un fichier mais dans sa sortie standard, nous avons besoin de rédiger celle-ci dans un fichier.
+Généralement, c'est fait depuis la ligne de commande en utilisant le chevron '>' pour rediriger la sortie vers un fichier :
+`
+build\Release\inOneWeekend.exe > image.ppm
+`
