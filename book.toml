@@ -1,0 +1,9 @@
+[book]
+authors = ["Hugues Gaillard"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Raytracing en un weekend"
+
+[output.html.playpen]
+editable = true
