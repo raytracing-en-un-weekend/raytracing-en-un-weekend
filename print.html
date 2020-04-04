@@ -33,6 +33,9 @@
         
 
         
+        <!-- MathJax -->
+        <script async type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        
     </head>
     <body>
         <!-- Provide site root to javascript -->
@@ -82,8 +85,8 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div id="sidebar-scrollbox" class="sidebar-scrollbox">
-                <ol class="chapter"><li class="expanded affix "><a href="introduction.html">Introduction</a></li><li class="expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li></ol>
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -340,7 +343,7 @@ inline vec3 unit_vector(vec3 v) {
     return v / v.length();
 }
 </code></pre>
-<p>Maintenant, nous pouvons changer notre fonction <code>main</code> pour l'utiliser :</p>
+<p>Maintenant, nous pouvons changer notre fonction <code>main</code> pour utiliser cette classe :</p>
 <pre><code class="language-cpp">#include &quot;vec3.h&quot;
 
 #include &lt;iostream&gt;
@@ -362,6 +365,91 @@ int main() {
     std::cerr &lt;&lt; &quot;\nDone.\n&quot;;
 }
 </code></pre>
+<h1><a class="header" href="#des-rayons-une-caméra-et-un-arrière-plan" id="des-rayons-une-caméra-et-un-arrière-plan">Des rayons, une caméra et un arrière-plan</a></h1>
+<p>Le point commun de tous les ray tracers, c'est une classe permettant de modélisation un rayon de lumière (ray) et un calcul déterminant la couleur vue le long de ce rayon.</p>
+<p>Nous pouvons modéliser un rayon comme une fonction :</p>
+<p>\[ p(t)=a+t \vec{b} \]</p>
+<p>Ici \( p \) est une position 3D le long d'une ligne 3D. \( a \) est l'origine du rayon et \( \vec{b} \) est la direction du rayon. Le rayon a également un paramètre \( t \), un nombre réel (<code>double</code> dans le code).
+Fournir un \( t \) différent et \( p(t) \) déplacera le point le long du rayon. Ajoutez un \( t \) négatif et on peut se déplacer n'importe où le long de cette ligne 3D. Pour un \( t \) positif, on peut se déplacer seulement sur la partie en face de \( a \), et c'est ce qu'on appelle souvent une demi-ligne ou rayon.</p>
+<p><img src="img/interpolation_lineaire.jpg" alt="Interpolation linéaire" /></p>
+<p>La fonction \( p(t) \) peut se modéliser comme une classe <code>ray</code> pour laquelle on implémente une fonction <code>ray::at(t)</code> :</p>
+<pre><code class="language-cpp">#ifndef RAY_H
+#define RAY_H
+
+#include &quot;vec3.h&quot;
+
+class ray {
+    public:
+        ray() {}
+        ray(const vec3&amp; origin, const vec3&amp; direction)
+            : orig(origin), dir(direction)
+        {}
+
+        vec3 origin() const    { return orig; }
+        vec3 direction() const { return dir; }
+
+        vec3 at(double t) const {
+            return orig + t*dir;
+        }
+
+    public:
+        vec3 orig;
+        vec3 dir;
+};
+
+#endif
+</code></pre>
+<p>Maintenant, nous sommes fins prêts à implémenter un ray tracer. A son coeur, le ray tracer envoie des rayons pour chaque pixel de l'image et calcule la couleur perçue dans la direction de ces rayons. Les étapes sont donc au nombre de 3 :</p>
+<ol>
+<li>calculer le rayon depuis l'oeil (la caméra) au pixel</li>
+<li>déterminer quels objets le rayon va traverser (calcul d'intersection)</li>
+<li>calculer une couleur sur ce point d'intersection.</li>
+</ol>
+<p>Quand je développe un ray tracer, je commence par créer une caméra simple pour pouvoir visualiser et débugger mon code. Je fais également une petite fonction <code>color(ray)</code> qui retourne la couleur de l'arrière-plan (un simple dégradé).</p>
+<p>Je tombe souvent sur des problèmes quand j'utilise des images carrées pour déboguer car je transpose \(x\) et \(y\) trop souvent, donc je fais des images en \(200\times100\). </p>
+<p>Je mets &quot;l'oeil&quot; (le centre de la caméra) aux coordonnées \((0,0,0)\). Je place l'axe \(y\) qui pointe vers le haut et l'axe \(x\) dirigé vers la droite. Pour respecter la convention d'un système de coordonées 'main droite', je place un axe \(z\) négatif vers l'écran. Je balaye l'écran depuis le coin inférieur gauche et j'utilise 2 vecteurs de décalage le long des côtés de l'écran pour déplacer le bout du rayon sur la surface de l'écran. Notez que le vecteur de direction n'est pas un vecteur de longueur normalisé (longueur unitaire) parce que je pense que ça rend le code plus simple et légèrement plus rapide.</p>
+<p><img src="img/geometrie_camera.jpg" alt="Géométrie de la caméra" /></p>
+<p>Dessous en code, le rayon \(r\) est approximativement dirigé vers les centres des pixels (je ne me focalise pas sur l'exatitude pour l'instant car nous ajouterons l'antialiasing plus tard).</p>
+<pre><code class="language-cpp">#include &quot;ray.h&quot;
+
+#include &lt;iostream&gt;
+
+vec3 ray_color(const ray&amp; r) {
+    vec3 unit_direction = unit_vector(r.direction());
+    auto t = 0.5*(unit_direction.y() + 1.0);
+    return (1.0-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
+}
+
+int main() {
+    const int image_width = 200;
+    const int image_height = 100;
+
+    std::cout &lt;&lt; &quot;P3\n&quot; &lt;&lt; image_width &lt;&lt; &quot; &quot; &lt;&lt; image_height &lt;&lt; &quot;\n255\n&quot;;
+    vec3 lower_left_corner(-2.0, -1.0, -1.0);
+    vec3 horizontal(4.0, 0.0, 0.0);
+    vec3 vertical(0.0, 2.0, 0.0);
+    vec3 origin(0.0, 0.0, 0.0);
+    for (int j = image_height-1; j &gt;= 0; --j) {
+        std::cerr &lt;&lt; &quot;\rScanlines remaining: &quot; &lt;&lt; j &lt;&lt; ' ' &lt;&lt; std::flush;
+        for (int i = 0; i &lt; image_width; ++i) {
+            auto u = double(i) / image_width;
+            auto v = double(j) / image_height;
+            ray r(origin, lower_left_corner + u*horizontal + v*vertical);
+            vec3 color = ray_color(r);
+            color.write_color(std::cout);
+        }
+    }
+
+    std::cerr &lt;&lt; &quot;\nDone.\n&quot;;
+}
+</code></pre>
+<p>La fonction <code>ray_color(ray)</code> mélange linéairement du blanc et du bleu selon la hauteur de la coordonnée \(y\) <em>après</em> avoir redimensionner la direction du rayon en vecteur unitaire (normalisé) (donc \(-1.0 &lt; y &lt; 1.0\)).
+Parce qu'on est en train de regarder la hauteur \(y\) après avoir normalisé le vecteur, vous remarquerez un dégradé horizontal vers la couleur en plus du dégradé vertical.</p>
+<p>Ensuite, je redimensionne grâce une astuce classique de manière à ce que \(0.0 \leq t \leq 1.0\). Quand \(t=1.0\) je veux du bleu. Quand \(t=0.0\), je veux du blanc. Et entre, je veux un dégradé. Cela forme un dégradé linéaire, ou interpolation linéaire, ou 'lerp' (de <em>linear interpolation</em>). Une interpolation linéaire est toujours de la forme :</p>
+<p>\[ \text{blendedValue} = (1-t) \times \text{startValue} + t \times \text{endValue} \]</p>
+<p>avec \(t\) allant de 0 à 1. Dans notre cas, le code suivant produit :</p>
+<p><img src="img/degrade_bleu_blanc.png" alt="Dégradé du bleu au blanc qui dépend du rayon de coordonnées Y" /></p>
+<h1><a class="header" href="#ajouter-une-sphère" id="ajouter-une-sphère">Ajouter une sphère</a></h1>
 
                     </main>
 
@@ -397,12 +485,6 @@ int main() {
         
 
         
-        <script src="ace.js" type="text/javascript" charset="utf-8"></script>
-        <script src="editor.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mode-rust.js" type="text/javascript" charset="utf-8"></script>
-        <script src="theme-dawn.js" type="text/javascript" charset="utf-8"></script>
-        <script src="theme-tomorrow_night.js" type="text/javascript" charset="utf-8"></script>
-        
 
         
         <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
@@ -421,7 +503,9 @@ int main() {
         
         <script type="text/javascript">
         window.addEventListener('load', function() {
-            window.setTimeout(window.print, 100);
+            MathJax.Hub.Register.StartupHook('End', function() {
+                window.setTimeout(window.print, 100);
+            });
         });
         </script>
         
