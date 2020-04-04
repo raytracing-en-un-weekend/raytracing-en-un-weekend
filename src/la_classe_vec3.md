@@ -109,7 +109,7 @@ inline vec3 unit_vector(vec3 v) {
 }
 ```
 
-Maintenant, nous pouvons changer notre fonction `main` pour l'utiliser :
+Maintenant, nous pouvons changer notre fonction `main` pour utiliser cette classe :
 
 ```cpp
 #include "vec3.h"

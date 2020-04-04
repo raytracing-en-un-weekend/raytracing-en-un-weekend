@@ -5,5 +5,5 @@ multilingual = false
 src = "src"
 title = "Raytracing en un weekend"
 
-[output.html.playpen]
-editable = true
+[output.html]
+mathjax-support = true
