@@ -1,6 +1,6 @@
 # Introduction
 
-> Ce site est une traduction de l'excellente série de livres sur le raytracing de Peter Shirley. Le ray tracing, ou lancer de rayons en français, est une technique de calcul d'optique par ordinateur, notamment utilisée pour le rendu d'image de synthèse (source : [Wikipedia](https://fr.wikipedia.org/wiki/Ray_tracing)). Cette traduction est rendue possible grâce à son choix de publier ses écrits sous license permissive CC0 (anciennement payants).
+> Ce site est une traduction de l'excellente série de livres sur le raytracing de Peter Shirley. Le ray tracing, ou lancer de rayons en français, est une technique de calcul d'optique par ordinateur, notamment utilisée pour le rendu d'image de synthèse (source : [Wikipedia](https://fr.wikipedia.org/wiki/Ray_tracing)). Cette traduction est rendue possible grâce au choix de l'auteur de publier ses écrits sous license permissive CC0 (anciennement payants).
 
 ![Couverture](img/cover.jpg)
 
