@@ -86,7 +86,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li><li class="chapter-item expanded "><a href="normale_surface_plusieurs_objets.html"><strong aria-hidden="true">5.</strong> Normale à une surface et plusieurs objets</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li><li class="chapter-item expanded "><a href="normale_surface_plusieurs_objets.html"><strong aria-hidden="true">5.</strong> Normale à une surface et plusieurs objets</a></li><li class="chapter-item expanded "><a href="antialiasing.html"><strong aria-hidden="true">6.</strong> Antialiasing</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -556,7 +556,414 @@ if (discriminant &lt; 0) {
 }
 </code></pre>
 <p>Maintenant, comment gérer plusieurs sphères ? Il serait assez tentant de stocker un tableau de sphères, une solution très propre serait d'avoir une classe abtraite (que l'on ne peut pas instancier) pour chaque objet qu'un rayon pourrait traverser. De cette manière, une sphère, ou une liste de sphères pourraient être traversées. Le nom à donner à cette classe est un vrai dilemme : si on l'appelle objet ce n'est pas un bon nom puisqu'on fait de la programmation orientée objet par exemple. &quot;Surface&quot; est souvent utilisé, sauf que parfois nous voulons gérer des volumes... &quot;hittable&quot; (de l'anglais 'hit', touché, 'hittable', que l'on peut toucher) met en avant la principale fonction membre : 'hit'. Je n'aime aucun de ces choix mais partons sur 'hittable'.</p>
-<p>Cette classe <em>hittable</em> </p>
+<p>Cette classe <em>hittable</em> aura donc une méthode qui prend en paramètre un rayon (<em>ray</em>). La plupart des raytracers a jugé bon d'ajouter un intervalle valide pour la valeur \(t\) pour que \(t\) soit compris entre \(t_{min}\) et \(t_{max}\). Si \(t\) ne respecte pas \(t_{min} &lt; t &lt; t_{max}\), le &quot;hit&quot; n'est pas détecté. Une question qui apparait maintenant est : doit-on calculer la normale si le rayon touche quelque chose ? On pourrait finir par toucher quelque chose de plus proche et du coup, nous n'aurions besoin que de la normale de l'objet le plus proche. Je vais partir sur la solution simple et calculer un lot de petites choses que je stockerai dans une structure.</p>
+<p>Voici la classe abstraite 'hittable' :</p>
+<pre><code class="language-cpp">#ifndef HITTABLE_H
+#define HITTABLE_H
+
+#include &quot;ray.h&quot;
+
+struct hit_record {
+    vec3 p;
+    vec3 normal;
+};
+
+class hittable {
+    public:
+        virtual bool hit(const ray&amp; r, double t_min, double t_max, hit_record&amp; rec) const = 0;
+};
+
+#endif
+</code></pre>
+<p>Et voici l'implémentation pour la sphère :</p>
+<pre><code class="language-cpp">#ifndef SPHERE_H
+#define SPHERE_H
+
+#include &quot;hittable.h&quot;
+#include &quot;vec3.h&quot;
+
+class sphere: public hittable {
+    public:
+        sphere() {}
+        sphere(vec3 cen, double r) : center(cen), radius(r) {};
+
+        virtual bool hit(const ray&amp; r, double tmin, double tmax, hit_record&amp; rec) const;
+
+    public:
+        vec3 center;
+        double radius;
+};
+
+bool sphere::hit(const ray&amp; r, double t_min, double t_max, hit_record&amp; rec) const {
+    vec3 oc = r.origin() - center;
+    auto a = r.direction().length_squared();
+    auto half_b = dot(oc, r.direction());
+    auto c = oc.length_squared() - radius*radius;
+    auto discriminant = half_b*half_b - a*c;
+
+    if (discriminant &gt; 0) {
+        auto root = sqrt(discriminant);
+        auto temp = (-half_b - root)/a;
+        if (temp &lt; t_max &amp;&amp; temp &gt; t_min) {
+            rec.t = temp;
+            rec.p = r.at(rec.t);
+            rec.normal = (rec.p - center) / radius;
+            return true;
+        }
+        temp = (-half_b + root) / a;
+        if (temp &lt; t_max &amp;&amp; temp &gt; t_min) {
+            rec.t = temp;
+            rec.p = r.at(rec.t);
+            rec.normal = (rec.p - center) / radius;
+            return true;
+        }
+    }
+    return false;
+}
+
+
+#endif
+</code></pre>
+<p>Une deuxième question que l'on pourrait se poser est la direction dans laquelle les normales doivent toujours pointer. Jusqu'à présent, la normale trouvée sera toujours dans la direction du centre du point d'intersection (la normale pointe vers l'extérieur). Si le rayon intersectionne la sphère depuis l'extérieur, la normale pointera à l'opposée du rayon. Si le rayon intersectionne la sphère depuis l'intérieur, la normale (qui pointe toujours vers l'extérieure) pointera vers le rayon. De plus, nous pouvons avoir la normale qui pointe toujours à l'opposée du rayon. Si le rayon est à l'extérieur de la sphère, la normale pointera à l'extérieure, mais si le rayon est à l'intérieur de la sphère, la normale pointera vers l'intérieur.</p>
+<p><img src="img/directions_possibles_normale.jpg" alt="Les différentes directions possibles que peut prendre la normale" /></p>
+<p>Nous devons choisir une de ses possibilités et s'y tenir, car nous voudrons éventuellement déterminer de quel côté de la surface un rayon provient. C'est important pour les objets qui sont rendus de façon différente de chaque côté, comme du texte qu'on écrirait sur une feuille de papier ou pour des objets qui ont un intérieur et un extérieur, comme des boules de verre.</p>
+<p>Si nous décidons d'avoir les normales qui pointent toujours vers l'extérieur, nous avons besoin de déterminer de quel côté le rayon est pour le colorer. On peut le déterminer en comparant le rayon avec la normale. Si le rayon et la normale pointent dans la même direction, le rayon est à l'intérieur de l'objet. Ca peut être déterminé en prenant le produit scalaire des deux vecteurs : si le produit scalaire est positif, le rayon est à l'intérieur de la sphère.</p>
+<pre><code class="language-cpp">if (dot(ray_direction, outward_normal) &gt; 0.0) {
+    // ray is inside the sphere
+    ...
+} else {
+    // ray is outside the sphere
+    ...
+}
+</code></pre>
+<p>Si nous décidons d'avoir les normales qui pointent dans la direction opposée au rayon, nous ne pouvons pas utiliser le produit scalaire pour déterminer de quel côté de la surface le rayon est. A la place, nous avons besoin de stocker l'information :</p>
+<pre><code class="language-cpp">bool front_face;
+if (dot(ray_direction, outward_normal) &gt; 0.0) {
+    // ray is inside the sphere
+    normal = -outward_normal;
+    front_face = false;
+}
+else {
+    // ray is outside the sphere
+    normal = outward_normal;
+    front_face = true;
+}
+</code></pre>
+<p>La décision de savoir si vous souhaitez avoir les normales qui pointent toujours vers l'extérieure ou toujours à l'opposées du rayon est liée à la décision de savoir si vous voulez déterminer le côté de la surface au moment de la géométrie ou au moment de la coloration. Dans ce livre, nous avons plus de &quot;matériaux&quot; (type de surface) que nous aurons de types de géométrie, donc nous choisirons la voie de la facilité et nous déterminerons l'endroit/l'envers de la surface au moment de la géométrie. C'est juste une question de goût et vous trouverez les deux implémentations dans la littérature.</p>
+<p>Nous ajoutons la variable booléenne <code>front_face</code> à la structure <code>hit_record</code>. Je sais que nous aurons besoin plus tard de flou de mouvement, donc j'ajoute également une variable <code>t</code> pour stocker le temps.</p>
+<pre><code class="language-cpp">#ifndef HITTABLE_H
+#define HITTABLE_H
+
+#include &quot;ray.h&quot;
+
+struct hit_record {
+    vec3 p;
+    vec3 normal;
+    double t;
+    bool front_face;
+
+    inline void set_face_normal(const ray&amp; r, const vec3&amp; outward_normal) {
+        front_face = dot(r.direction(), outward_normal) &lt; 0;
+        normal = front_face ? outward_normal :-outward_normal;
+    }
+};
+
+class hittable {
+    public:
+        virtual bool hit(const ray&amp; r, double t_min, double t_max, hit_record&amp; rec) const = 0;
+};
+
+#endif
+</code></pre>
+<p>Et ensuite, nous ajoutons la détermination du côté de la surface dans la classe :</p>
+<pre><code class="language-cpp">bool sphere::hit(const ray&amp; r, double t_min, double t_max, hit_record&amp; rec) const {
+    vec3 oc = r.origin() - center;
+    auto a = r.direction().length_squared();
+    auto half_b = dot(oc, r.direction());
+    auto c = oc.length_squared() - radius*radius;
+    auto discriminant = half_b*half_b - a*c;
+
+    if (discriminant &gt; 0) {
+        auto root = sqrt(discriminant);
+        auto temp = (-half_b - root)/a;
+        if (temp &lt; t_max &amp;&amp; temp &gt; t_min) {
+            rec.t = temp;
+            rec.p = r.at(rec.t);
+            vec3 outward_normal = (rec.p - center) / radius;
+            rec.set_face_normal(r, outward_normal);
+            return true;
+        }
+        temp = (-half_b + root) / a;
+        if (temp &lt; t_max &amp;&amp; temp &gt; t_min) {
+            rec.t = temp;
+            rec.p = r.at(rec.t);
+            vec3 outward_normal = (rec.p - center) / radius;
+            rec.set_face_normal(r, outward_normal);
+            return true;
+        }
+    }
+    return false;
+}
+</code></pre>
+<p>Nous ajoutons une liste d'objets :</p>
+<pre><code class="language-cpp">#ifndef HITTABLE_LIST_H
+#define HITTABLE_LIST_H
+
+#include &quot;hittable.h&quot;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+using std::shared_ptr;
+using std::make_shared;
+
+class hittable_list: public hittable {
+    public:
+        hittable_list() {}
+        hittable_list(shared_ptr&lt;hittable&gt; object) { add(object); }
+
+        void clear() { objects.clear(); }
+        void add(shared_ptr&lt;hittable&gt; object) { objects.push_back(object); }
+
+        virtual bool hit(const ray&amp; r, double tmin, double tmax, hit_record&amp; rec) const;
+
+    public:
+        std::vector&lt;shared_ptr&lt;hittable&gt;&gt; objects;
+};
+
+bool hittable_list::hit(const ray&amp; r, double t_min, double t_max, hit_record&amp; rec) const {
+    hit_record temp_rec;
+    bool hit_anything = false;
+    auto closest_so_far = t_max;
+
+    for (const auto&amp; object : objects) {
+        if (object-&gt;hit(r, t_min, closest_so_far, temp_rec)) {
+            hit_anything = true;
+            closest_so_far = temp_rec.t;
+            rec = temp_rec;
+        }
+    }
+
+    return hit_anything;
+}
+
+#endif
+</code></pre>
+<h2><a class="header" href="#quelques-nouvelles-fonctionnalités-du-c" id="quelques-nouvelles-fonctionnalités-du-c">Quelques nouvelles fonctionnalités du C++</a></h2>
+<p>La classe <code>hittable_list</code> utilise deux fonctionnalités du C++ qui peuvent vous sembler inconnu si vous n'avez pas l'habitude de ce langage : <code>vector</code> et <code>shared_ptr</code>.</p>
+<p><code>shared_ptr&lt;type&gt;</code> est un pointeur vers un type alloué, avec une sémantique de comptage de références. Chaque fois que vous attribuez sa valeur à un autre pointeur partagé (<code>shared_ptr</code>, généralement avec une affectation simple), le nombre de références est incrémenté. Lorsque les pointeurs partagés sortent de la portée (comme à la fin d'un bloc ou d'une fonction), le nombre de références est décrémenté. Une fois que le nombre atteint zéro, l'objet est supprimé de la mémoire.</p>
+<p>Habituellement, un <code>shared_ptr</code> est d'abord initialisé avec un un objet nouvellement alloué :</p>
+<pre><code class="language-cpp">shared_ptr&lt;double&gt; double_ptr = make_shared&lt;double&gt;(0.37);
+shared_ptr&lt;vec3&gt;   vec3_ptr   = make_shared&lt;vec3&gt;(1.414214, 2.718281, 1.618034);
+shared_ptr&lt;sphere&gt; sphere_ptr = make_shared&lt;sphere&gt;(vec3(0,0,0), 1.0);
+</code></pre>
+<p><code>make_shared&lt;thing&gt;(thing_constructor_params ...)</code> alloue une nouvelle instance du type <code>thing</code> en utilisant les paramètres de constructeur. Cette fonction retourne un <code>shared_ptr&lt;thing&gt;</code>.</p>
+<p>Puisque le type peut automatiquement être inféré par le type de retour de <code>make_shared&lt;type&gt;(...)</code>, les lignes au-dessus peuvent être reécrites plus simplement en utilisant le mot-clé <code>auto</code> :</p>
+<pre><code class="language-cpp">auto double_ptr = make_shared&lt;double&gt;(0.37);
+auto vec3_ptr   = make_shared&lt;vec3&gt;(1.414214, 2.718281, 1.618034);
+auto sphere_ptr = make_shared&lt;sphere&gt;(vec3(0,0,0), 1.0);
+</code></pre>
+<p>Nous utiliserons ces pointeurs partagés dans notre code, car ça permet à plusieurs géométries de partager une même instance (par exemple, un lot de sphères qui utilise le même matériau/texture) et parce que ça rend la gestion de la mémoire automatique et plus facile à comprendre.</p>
+<p><code>std::shared_ptr</code> est inclus avec le header <code>&lt;memory&gt;</code>.</p>
+<p>La deuxième fonctionnalité du C++ qui peut vous sembler non familiaire est le <code>std::vector</code>. C'est une sorte de tableau générique. Dans le code au-dessus, nous utilisons une collection de pointeurs vers <code>hittable</code>. <code>std::vector</code> s'aggrandie automatiquement à chaque fois qu'une valeur est ajoutée : <code>objects.push_back(object)</code> ajoute une valeur à la fin du <code>std::vector</code>.</p>
+<p><code>std::vector</code> est inclus avec le header <code>&lt;vector&gt;</code>.</p>
+<p>Finalement, l'instruction <code>using</code> indique au compilateur que nous obtenons <code>shared_ptr</code> et <code>make_shared</code> depuis la librairie standard <code>std</code>, donc nous n'avons pas besoin de les préfixer avec <code>std::</code> à chaque fois que nous y faisons référence.</p>
+<h2><a class="header" href="#constantes-usuelles-et-fonctions-utilitaires" id="constantes-usuelles-et-fonctions-utilitaires">Constantes usuelles et fonctions utilitaires</a></h2>
+<p>Nous avons besoin de quelques constantes mathématiques donc nous les définissons dans un fichier d'en-tête qui leurs sont propres. Pour l'instant, nous n'avons besoin que de la valeur infinie, mais nous allons également y définir Pi. Nous allons également placer des fonctions utilitaires dans l'en-tête <em>rtweekend.h</em> .</p>
+<pre><code class="language-cpp">#ifndef RTWEEKEND_H
+#define RTWEEKEND_H
+
+#include &lt;cmath&gt;
+#include &lt;cstdlib&gt;
+#include &lt;limits&gt;
+#include &lt;memory&gt;
+
+
+// Usings
+
+using std::shared_ptr;
+using std::make_shared;
+
+// Constants
+
+const double infinity = std::numeric_limits&lt;double&gt;::infinity();
+const double pi = 3.1415926535897932385;
+
+// Utility Functions
+
+inline double degrees_to_radians(double degrees) {
+    return degrees * pi / 180;
+}
+
+inline double ffmin(double a, double b) { return a &lt;= b ? a : b; }
+inline double ffmax(double a, double b) { return a &gt;= b ? a : b; }
+
+// Common Headers
+
+#include &quot;ray.h&quot;
+#include &quot;vec3.h&quot;
+
+#endif
+</code></pre>
+<p>Et le nouveau <code>main</code> :</p>
+<pre><code class="language-cpp">#include &quot;rtweekend.h&quot;
+
+#include &quot;hittable_list.h&quot;
+#include &quot;sphere.h&quot;
+
+#include &lt;iostream&gt;
+vec3 ray_color(const ray&amp; r, const hittable&amp; world) {
+    hit_record rec;
+    if (world.hit(r, 0, infinity, rec)) {
+        return 0.5 * (rec.normal + vec3(1,1,1));
+    }
+    vec3 unit_direction = unit_vector(r.direction());
+    auto t = 0.5*(unit_direction.y() + 1.0);
+    return (1.0-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
+}
+
+int main() {
+    const int image_width = 200;
+    const int image_height = 100;
+
+    std::cout &lt;&lt; &quot;P3\n&quot; &lt;&lt; image_width &lt;&lt; ' ' &lt;&lt; image_height &lt;&lt; &quot;\n255\n&quot;;
+
+    vec3 lower_left_corner(-2.0, -1.0, -1.0);
+    vec3 horizontal(4.0, 0.0, 0.0);
+    vec3 vertical(0.0, 2.0, 0.0);
+    vec3 origin(0.0, 0.0, 0.0);
+
+    hittable_list world;
+    world.add(make_shared&lt;sphere&gt;(vec3(0,0,-1), 0.5));
+    world.add(make_shared&lt;sphere&gt;(vec3(0,-100.5,-1), 100));
+
+    for (int j = image_height-1; j &gt;= 0; --j) {
+        std::cerr &lt;&lt; &quot;\rScanlines remaining: &quot; &lt;&lt; j &lt;&lt; ' ' &lt;&lt; std::flush;
+        for (int i = 0; i &lt; image_width; ++i) {
+            auto u = double(i) / image_width;
+            auto v = double(j) / image_height;
+            ray r(origin, lower_left_corner + u*horizontal + v*vertical);
+
+            vec3 color = ray_color(r, world);
+
+            color.write_color(std::cout);
+        }
+    }
+
+    std::cerr &lt;&lt; &quot;\nDone.\n&quot;;
+}
+</code></pre>
+<p>Ce qui nous donne l'image suivante qui est une visualisation de où se situe les normales sur la surface de la sphère. C'est souvent une bonne façon pour détecter des problèmes sur un modèle 3D.</p>
+<p><img src="img/sphere_normales_sol.png" alt="Rendu d'une sphère avec ses normales colorées et un sol" /></p>
+<h1><a class="header" href="#antialiasing" id="antialiasing">Antialiasing</a></h1>
+<p>Quand une vraie caméra prend une photo, en général, les bords ne sont pas crenelés car les pixels des bords des objets sont un mélange de premier-plan et d'arrière-plan. Nous poutons obtenir le même effet en faisant la moyenne d'un lot d'échantillons à l'intérieur de chaque pixel. </p>
+<p>Une chose dont nous avons besoin est un générateur de nombres aléatoires qui renvoies des nombres réels aléatoires. Nous avons besoin d'une fonction qui renvoie un nombre aléatoire canonique, qui, par convention, renvoie un réel aléatoire dans la plage \(0 \leq r &lt; 1 \). Le 'strictement inférieur' avant le 1 est important car nous en profiterons, comme vous le verrez plus tard.</p>
+<p>Une approche simple consiste à utiliser la fonction <code>rand()</code> qui se trouve dans <code>&lt;cstdlib&gt;</code>. Cette fonction renvoie un entier aléatoire compris entre 0 et <code>RAND_MAX</code>. Par conséquent, nous pouvons obtenir un nombre réel aléatoire comme souhaité avec l'extrait de code suivant, ajouté à <code>rtweekend.h</code> :</p>
+<pre><code class="language-cpp">#include &lt;cstdlib&gt;
+...
+
+inline double random_double() {
+    // Returns a random real in [0,1).
+    return rand() / (RAND_MAX + 1.0);
+}
+
+inline double random_double(double min, double max) {
+    // Returns a random real in [min,max).
+    return min + (max-min)*random_double();
+}
+</code></pre>
+<p>Le C++ traditionnel n'a pas de générateur de nombre aléatoire standard, seules les versions récentes du C++ ont adressé ce problème par l'en-tête <code>&lt;random&gt;</code> (même si imparfait). Si vous voulez l'utiliser, vous pouvez obtenir un nombre aléatoire respectant les conditions dont nous avons besoin avec ce code :</p>
+<pre><code class="language-cpp">#include &lt;functional&gt;
+#include &lt;random&gt;
+
+inline double random_double() {
+    static std::uniform_real_distribution&lt;double&gt; distribution(0.0, 1.0);
+    static std::mt19937 generator;
+    static std::function&lt;double()&gt; rand_generator =
+        std::bind(distribution, generator);
+    return rand_generator();
+}
+</code></pre>
+<p>Pour un pixel donné, nous avons plusieurs échantillons à l'intérieur de ce pixel et des rayons traversant chacun de ces échantillons. Les couleurs de ses rayons sont ensuite moyennées :</p>
+<p><img src="img/pixel_samples.jpg" alt="Visualisation normales d'une sphère" /></p>
+<p>Nous pouvons encapsuler ce nouveau concept dans la classe <code>camera</code> qui reste aligné sur l'axe comme précédemment :</p>
+<pre><code class="language-cpp">#ifndef CAMERA_H
+#define CAMERA_H
+
+#include &quot;rtweekend.h&quot;
+
+class camera {
+    public:
+        camera() {
+            lower_left_corner = vec3(-2.0, -1.0, -1.0);
+            horizontal = vec3(4.0, 0.0, 0.0);
+            vertical = vec3(0.0, 2.0, 0.0);
+            origin = vec3(0.0, 0.0, 0.0);
+        }
+
+        ray get_ray(double u, double v) {
+            return ray(origin, lower_left_corner + u*horizontal + v*vertical - origin);
+        }
+
+    public:
+        vec3 origin;
+        vec3 lower_left_corner;
+        vec3 horizontal;
+        vec3 vertical;
+};
+#endif
+</code></pre>
+<p>Pour gérer le multi-échantillonage du calcul de la couleur, nous allons mettre à jour la fonction <code>vec3::write_color()</code>. Plutôt que d'ajouter une petite fraction de la contribution à chaque fois que nous accumulons plus de lumière à la couleur, nous ajoutons simplement la couleur pleine à chaque itération et seulement à la fin, nous divison le résultat par le nombre de samples/échantillons quand nous écrivons la couleur. En plus de ça, nous allons ajouter une fonction pratique à <code>rtweekend.h</code> : <code>clamp(x, min, max)</code> qui borne la valeur \(x \) dans l'intervalle \([min, max] \) :</p>
+<pre><code class="language-cpp">inline double clamp(double x, double min, double max) {
+    if (x &lt; min) return min;
+    if (x &gt; max) return max;
+    return x;
+}
+</code></pre>
+<p>vec3.h :</p>
+<pre><code class="language-cpp">void write_color(std::ostream &amp;out, int samples_per_pixel) {
+    // Divide the color total by the number of samples.
+    auto scale = 1.0 / samples_per_pixel;
+    auto r = scale * e[0];
+    auto g = scale * e[1];
+    auto b = scale * e[2];
+
+    // Write the translated [0,255] value of each color component.
+    out &lt;&lt; static_cast&lt;int&gt;(256 * clamp(r, 0.0, 0.999)) &lt;&lt; ' '
+        &lt;&lt; static_cast&lt;int&gt;(256 * clamp(g, 0.0, 0.999)) &lt;&lt; ' '
+        &lt;&lt; static_cast&lt;int&gt;(256 * clamp(b, 0.0, 0.999)) &lt;&lt; '\n';
+}
+</code></pre>
+<p>La fonction <code>main</code> change également :</p>
+<pre><code class="language-cpp">int main() {
+    const int image_width = 200;
+    const int image_height = 100;
+    const int samples_per_pixel = 100;
+
+    std::cout &lt;&lt; &quot;P3\n&quot; &lt;&lt; image_width &lt;&lt; &quot; &quot; &lt;&lt; image_height &lt;&lt; &quot;\n255\n&quot;;
+
+    hittable_list world;
+    world.add(make_shared&lt;sphere&gt;(vec3(0,0,-1), 0.5));
+    world.add(make_shared&lt;sphere&gt;(vec3(0,-100.5,-1), 100));
+    camera cam;
+    for (int j = image_height-1; j &gt;= 0; --j) {
+        std::cerr &lt;&lt; &quot;\rScanlines remaining: &quot; &lt;&lt; j &lt;&lt; ' ' &lt;&lt; std::flush;
+        for (int i = 0; i &lt; image_width; ++i) {
+            vec3 color(0, 0, 0);
+            for (int s = 0; s &lt; samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / image_width;
+                auto v = (j + random_double()) / image_height;
+                ray r = cam.get_ray(u, v);
+                color += ray_color(r, world);
+            }
+            color.write_color(std::cout, samples_per_pixel);
+        }
+    }
+
+    std::cerr &lt;&lt; &quot;\nDone.\n&quot;;
+}
+</code></pre>
+<p>Maintenant, si nous zoomons sur l'image produite, le grand changement est sur les bords/arêtes qui appartiennent au premier plan et à l'arrière-plan :</p>
+<p><img src="img/antialiasing.png" alt="Antialiasing" /></p>
 
                     </main>
 

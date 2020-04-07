@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Raytracing en un weekend</title>
+        <title>Antialiasing - Raytracing en un weekend</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li><li class="chapter-item expanded "><a href="normale_surface_plusieurs_objets.html"><strong aria-hidden="true">5.</strong> Normale à une surface et plusieurs objets</a></li><li class="chapter-item expanded "><a href="antialiasing.html"><strong aria-hidden="true">6.</strong> Antialiasing</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li><li class="chapter-item expanded "><a href="normale_surface_plusieurs_objets.html"><strong aria-hidden="true">5.</strong> Normale à une surface et plusieurs objets</a></li><li class="chapter-item expanded "><a href="antialiasing.html" class="active"><strong aria-hidden="true">6.</strong> Antialiasing</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -150,34 +150,127 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
-<blockquote>
-<p>Ce site est une traduction de l'excellente série de livres sur le raytracing de Peter Shirley. Le ray tracing, ou lancer de rayons en français, est une technique de calcul d'optique par ordinateur, notamment utilisée pour le rendu d'image de synthèse (source : <a href="https://fr.wikipedia.org/wiki/Ray_tracing">Wikipedia</a>). Cette traduction est rendue possible grâce au choix de l'auteur de publier ses écrits sous license permissive CC0 (anciennement payants).</p>
-</blockquote>
-<p><img src="img/cover.jpg" alt="Couverture" /></p>
-<h1><a class="header" href="#point-de-départ" id="point-de-départ">Point de départ</a></h1>
-<p>J'ai enseigné pendant plusieurs années la programmation à destination de l'image. Souvent, j'enseigne le ray tracing (lancé de rayons), parce que vous êtes obligé d'écrire tout le code mais vous pouvez quand même obtenir des images super cools. J'ai décidé d'adapter mes notes de cours en manuel, pour que vous puissiez réaliser un programme cool, aussi vite que possible.
-Ca ne sera pas un moteur de rendu par lancé de rayons complet mais il sera capable d'illumination indirecte, ce qui a permis aux films de gagner en réalisme. Suivez ces étapes, et l'architecture du ray tracer que vous allez produire sera suffisante pour que vous puissiez construire un ray tracer plus complet par la suite.</p>
-<p>Quand quelqu'un parle de &quot;ray tracing&quot;, ça peut vouloir dire plusieurs choses. Ce que je m'aprête à décrire est techniquellement un &quot;path tracer&quot; assez général. Alors que le code que vous allez écrire est très simple (laissons l'ordinateur faire le travail !), je pense que vous serez très satisfait des images que vous pourrez créer avec.</p>
-<p>Je vais vous expliquer comme coder un ray tracer dans l'ordre auquel j'ai été habitué à le faire, ainsi que quelques conseils de débogage. A la fin, vous aurez un ray tracer qui produira de belles images. Vous serez capable de faire ça normalement en un weekend. Si ça vous prend plus de temps, ne vous en faites pas. J'utilise le C++ comme langage de programmation, mais vous n'avez pas besoin de faire pareil. Cependant, je vous suggère de le faire, parce que le C++ est rapide, portable et que la plupart des moteurs de rendu de films et jeux vidéos sont écrits en C++. Notez que j'éviterai d'utiliser les fonctionnalités modernes du C++, mais l'héritage et la surcharge d'opérateur sont trop utiles aux ray tracers pour passer outre. Je montre tout le code utilisé, excepté pour quelques calculs très simples pour la classe <code>vec3</code>. Je crois beaucoup au dicton &quot;c'est en faisant que l'on apprend&quot;.</p>
-<p>L'intégralité du code source est disponible ici :
-<a href="https://github.com/RayTracing/raytracing.github.io/">https://github.com/RayTracing/raytracing.github.io/</a>.</p>
-<p>Je suppose que vous êtes un peu familier avec les vecteurs (comme le produit scalaire et l'addition de deux vecteurs). Si vous n'y connaissez rien, faites quelques recherches avant de poursuivre.</p>
-<p>Peter Shirley, edited by Steve Hollasch and Trevor David Black</p>
-<p>Version 3.0.1, 2020-03-31</p>
-<p>Copyright 2018-2020 Peter Shirley. All rights reserved.</p>
-<p>Traduction française par Hugues Gaillard.</p>
+                        <h1><a class="header" href="#antialiasing" id="antialiasing">Antialiasing</a></h1>
+<p>Quand une vraie caméra prend une photo, en général, les bords ne sont pas crenelés car les pixels des bords des objets sont un mélange de premier-plan et d'arrière-plan. Nous poutons obtenir le même effet en faisant la moyenne d'un lot d'échantillons à l'intérieur de chaque pixel. </p>
+<p>Une chose dont nous avons besoin est un générateur de nombres aléatoires qui renvoies des nombres réels aléatoires. Nous avons besoin d'une fonction qui renvoie un nombre aléatoire canonique, qui, par convention, renvoie un réel aléatoire dans la plage \(0 \leq r &lt; 1 \). Le 'strictement inférieur' avant le 1 est important car nous en profiterons, comme vous le verrez plus tard.</p>
+<p>Une approche simple consiste à utiliser la fonction <code>rand()</code> qui se trouve dans <code>&lt;cstdlib&gt;</code>. Cette fonction renvoie un entier aléatoire compris entre 0 et <code>RAND_MAX</code>. Par conséquent, nous pouvons obtenir un nombre réel aléatoire comme souhaité avec l'extrait de code suivant, ajouté à <code>rtweekend.h</code> :</p>
+<pre><code class="language-cpp">#include &lt;cstdlib&gt;
+...
+
+inline double random_double() {
+    // Returns a random real in [0,1).
+    return rand() / (RAND_MAX + 1.0);
+}
+
+inline double random_double(double min, double max) {
+    // Returns a random real in [min,max).
+    return min + (max-min)*random_double();
+}
+</code></pre>
+<p>Le C++ traditionnel n'a pas de générateur de nombre aléatoire standard, seules les versions récentes du C++ ont adressé ce problème par l'en-tête <code>&lt;random&gt;</code> (même si imparfait). Si vous voulez l'utiliser, vous pouvez obtenir un nombre aléatoire respectant les conditions dont nous avons besoin avec ce code :</p>
+<pre><code class="language-cpp">#include &lt;functional&gt;
+#include &lt;random&gt;
+
+inline double random_double() {
+    static std::uniform_real_distribution&lt;double&gt; distribution(0.0, 1.0);
+    static std::mt19937 generator;
+    static std::function&lt;double()&gt; rand_generator =
+        std::bind(distribution, generator);
+    return rand_generator();
+}
+</code></pre>
+<p>Pour un pixel donné, nous avons plusieurs échantillons à l'intérieur de ce pixel et des rayons traversant chacun de ces échantillons. Les couleurs de ses rayons sont ensuite moyennées :</p>
+<p><img src="img/pixel_samples.jpg" alt="Visualisation normales d'une sphère" /></p>
+<p>Nous pouvons encapsuler ce nouveau concept dans la classe <code>camera</code> qui reste aligné sur l'axe comme précédemment :</p>
+<pre><code class="language-cpp">#ifndef CAMERA_H
+#define CAMERA_H
+
+#include &quot;rtweekend.h&quot;
+
+class camera {
+    public:
+        camera() {
+            lower_left_corner = vec3(-2.0, -1.0, -1.0);
+            horizontal = vec3(4.0, 0.0, 0.0);
+            vertical = vec3(0.0, 2.0, 0.0);
+            origin = vec3(0.0, 0.0, 0.0);
+        }
+
+        ray get_ray(double u, double v) {
+            return ray(origin, lower_left_corner + u*horizontal + v*vertical - origin);
+        }
+
+    public:
+        vec3 origin;
+        vec3 lower_left_corner;
+        vec3 horizontal;
+        vec3 vertical;
+};
+#endif
+</code></pre>
+<p>Pour gérer le multi-échantillonage du calcul de la couleur, nous allons mettre à jour la fonction <code>vec3::write_color()</code>. Plutôt que d'ajouter une petite fraction de la contribution à chaque fois que nous accumulons plus de lumière à la couleur, nous ajoutons simplement la couleur pleine à chaque itération et seulement à la fin, nous divison le résultat par le nombre de samples/échantillons quand nous écrivons la couleur. En plus de ça, nous allons ajouter une fonction pratique à <code>rtweekend.h</code> : <code>clamp(x, min, max)</code> qui borne la valeur \(x \) dans l'intervalle \([min, max] \) :</p>
+<pre><code class="language-cpp">inline double clamp(double x, double min, double max) {
+    if (x &lt; min) return min;
+    if (x &gt; max) return max;
+    return x;
+}
+</code></pre>
+<p>vec3.h :</p>
+<pre><code class="language-cpp">void write_color(std::ostream &amp;out, int samples_per_pixel) {
+    // Divide the color total by the number of samples.
+    auto scale = 1.0 / samples_per_pixel;
+    auto r = scale * e[0];
+    auto g = scale * e[1];
+    auto b = scale * e[2];
+
+    // Write the translated [0,255] value of each color component.
+    out &lt;&lt; static_cast&lt;int&gt;(256 * clamp(r, 0.0, 0.999)) &lt;&lt; ' '
+        &lt;&lt; static_cast&lt;int&gt;(256 * clamp(g, 0.0, 0.999)) &lt;&lt; ' '
+        &lt;&lt; static_cast&lt;int&gt;(256 * clamp(b, 0.0, 0.999)) &lt;&lt; '\n';
+}
+</code></pre>
+<p>La fonction <code>main</code> change également :</p>
+<pre><code class="language-cpp">int main() {
+    const int image_width = 200;
+    const int image_height = 100;
+    const int samples_per_pixel = 100;
+
+    std::cout &lt;&lt; &quot;P3\n&quot; &lt;&lt; image_width &lt;&lt; &quot; &quot; &lt;&lt; image_height &lt;&lt; &quot;\n255\n&quot;;
+
+    hittable_list world;
+    world.add(make_shared&lt;sphere&gt;(vec3(0,0,-1), 0.5));
+    world.add(make_shared&lt;sphere&gt;(vec3(0,-100.5,-1), 100));
+    camera cam;
+    for (int j = image_height-1; j &gt;= 0; --j) {
+        std::cerr &lt;&lt; &quot;\rScanlines remaining: &quot; &lt;&lt; j &lt;&lt; ' ' &lt;&lt; std::flush;
+        for (int i = 0; i &lt; image_width; ++i) {
+            vec3 color(0, 0, 0);
+            for (int s = 0; s &lt; samples_per_pixel; ++s) {
+                auto u = (i + random_double()) / image_width;
+                auto v = (j + random_double()) / image_height;
+                ray r = cam.get_ray(u, v);
+                color += ray_color(r, world);
+            }
+            color.write_color(std::cout, samples_per_pixel);
+        }
+    }
+
+    std::cerr &lt;&lt; &quot;\nDone.\n&quot;;
+}
+</code></pre>
+<p>Maintenant, si nous zoomons sur l'image produite, le grand changement est sur les bords/arêtes qui appartiennent au premier plan et à l'arrière-plan :</p>
+<p><img src="img/antialiasing.png" alt="Antialiasing" /></p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-
-                        
-                            <a rel="next" href="creer_une_image.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="normale_surface_plusieurs_objets.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
+                        
+
                         
 
                         <div style="clear: both"></div>
@@ -187,11 +280,11 @@ Ca ne sera pas un moteur de rendu par lancé de rayons complet mais il sera capa
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-
-                
-                    <a rel="next" href="creer_une_image.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="prev" href="normale_surface_plusieurs_objets.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
+                
+
                 
             </nav>
 
