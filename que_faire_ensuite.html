@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Raytracing en un weekend</title>
+        <title>Que faire-ensuite - Raytracing en un weekend</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li><li class="chapter-item expanded "><a href="normale_surface_plusieurs_objets.html"><strong aria-hidden="true">5.</strong> Normale à une surface et plusieurs objets</a></li><li class="chapter-item expanded "><a href="antialiasing.html"><strong aria-hidden="true">6.</strong> Antialiasing</a></li><li class="chapter-item expanded "><a href="materiaux_diffus.html"><strong aria-hidden="true">7.</strong> Matériaux diffus</a></li><li class="chapter-item expanded "><a href="metal.html"><strong aria-hidden="true">8.</strong> Métal</a></li><li class="chapter-item expanded "><a href="dielectrique.html"><strong aria-hidden="true">9.</strong> Diélectrique</a></li><li class="chapter-item expanded "><a href="camera_positionnable.html"><strong aria-hidden="true">10.</strong> Caméra positionnable</a></li><li class="chapter-item expanded "><a href="flou_de_focus.html"><strong aria-hidden="true">11.</strong> Flou de focus</a></li><li class="chapter-item expanded "><a href="que_faire_ensuite.html"><strong aria-hidden="true">12.</strong> Que faire-ensuite</a></li><li class="chapter-item expanded "><a href="remerciements.html"><strong aria-hidden="true">13.</strong> Remerciements</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li><li class="chapter-item expanded "><a href="normale_surface_plusieurs_objets.html"><strong aria-hidden="true">5.</strong> Normale à une surface et plusieurs objets</a></li><li class="chapter-item expanded "><a href="antialiasing.html"><strong aria-hidden="true">6.</strong> Antialiasing</a></li><li class="chapter-item expanded "><a href="materiaux_diffus.html"><strong aria-hidden="true">7.</strong> Matériaux diffus</a></li><li class="chapter-item expanded "><a href="metal.html"><strong aria-hidden="true">8.</strong> Métal</a></li><li class="chapter-item expanded "><a href="dielectrique.html"><strong aria-hidden="true">9.</strong> Diélectrique</a></li><li class="chapter-item expanded "><a href="camera_positionnable.html"><strong aria-hidden="true">10.</strong> Caméra positionnable</a></li><li class="chapter-item expanded "><a href="flou_de_focus.html"><strong aria-hidden="true">11.</strong> Flou de focus</a></li><li class="chapter-item expanded "><a href="que_faire_ensuite.html" class="active"><strong aria-hidden="true">12.</strong> Que faire-ensuite</a></li><li class="chapter-item expanded "><a href="remerciements.html"><strong aria-hidden="true">13.</strong> Remerciements</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -150,32 +150,105 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
-<blockquote>
-<p>Ce site est une traduction de l'excellente série de livres sur le raytracing de Peter Shirley. Le ray tracing, ou lancer de rayons en français, est une technique de calcul d'optique par ordinateur, notamment utilisée pour le rendu d'image de synthèse (source : <a href="https://fr.wikipedia.org/wiki/Ray_tracing">Wikipedia</a>). Cette traduction est rendue possible grâce au choix de l'auteur de publier ses écrits sous license permissive CC0 (anciennement payants).</p>
-</blockquote>
-<p><img src="img/cover.jpg" alt="Couverture" /></p>
-<h1><a class="header" href="#point-de-départ" id="point-de-départ">Point de départ</a></h1>
-<p>J'ai enseigné pendant plusieurs années la programmation à destination de l'image. Souvent, j'enseigne le ray tracing (lancé de rayons), parce que vous êtes obligé d'écrire tout le code mais vous pouvez quand même obtenir des images super cools. J'ai décidé d'adapter mes notes de cours en manuel, pour que vous puissiez réaliser un programme cool, aussi vite que possible.
-Ca ne sera pas un moteur de rendu par lancé de rayons complet mais il sera capable d'illumination indirecte, ce qui a permis aux films de gagner en réalisme. Suivez ces étapes, et l'architecture du ray tracer que vous allez produire sera suffisante pour que vous puissiez construire un ray tracer plus complet par la suite.</p>
-<p>Quand quelqu'un parle de &quot;ray tracing&quot;, ça peut vouloir dire plusieurs choses. Ce que je m'aprête à décrire est techniquellement un &quot;path tracer&quot; assez général. Alors que le code que vous allez écrire est très simple (laissons l'ordinateur faire le travail !), je pense que vous serez très satisfait des images que vous pourrez créer avec.</p>
-<p>Je vais vous expliquer comme coder un ray tracer dans l'ordre auquel j'ai été habitué à le faire, ainsi que quelques conseils de débogage. A la fin, vous aurez un ray tracer qui produira de belles images. Vous serez capable de faire ça normalement en un weekend. Si ça vous prend plus de temps, ne vous en faites pas. J'utilise le C++ comme langage de programmation, mais vous n'avez pas besoin de faire pareil. Cependant, je vous suggère de le faire, parce que le C++ est rapide, portable et que la plupart des moteurs de rendu de films et jeux vidéos sont écrits en C++. Notez que j'éviterai d'utiliser les fonctionnalités modernes du C++, mais l'héritage et la surcharge d'opérateur sont trop utiles aux ray tracers pour passer outre. Je montre tout le code utilisé, excepté pour quelques calculs très simples pour la classe <code>vec3</code>. Je crois beaucoup au dicton &quot;c'est en faisant que l'on apprend&quot;.</p>
-<p>L'intégralité du code source est disponible ici :
-<a href="https://github.com/RayTracing/raytracing.github.io/">https://github.com/RayTracing/raytracing.github.io/</a>.</p>
-<p>Je suppose que vous êtes un peu familier avec les vecteurs (comme le produit scalaire et l'addition de deux vecteurs). Si vous n'y connaissez rien, faites quelques recherches avant de poursuivre.</p>
-<p>Peter Shirley, edited by Steve Hollasch and Trevor David Black</p>
-<p>Version 3.0.1, 2020-03-31</p>
-<p>Copyright 2018-2020 Peter Shirley. All rights reserved.</p>
-<p>Traduction française par Hugues Gaillard.</p>
+                        <h1><a class="header" href="#que-faire-ensuite" id="que-faire-ensuite">Que faire-ensuite</a></h1>
+<p>Déjà, nous allons recréer l'image de la couverture de ce livre : plein de sphères aléatoires :</p>
+<pre><code class="language-cpp">hittable_list random_scene() {
+    hittable_list world;
+
+    world.add(make_shared&lt;sphere&gt;(
+        vec3(0,-1000,0), 1000, make_shared&lt;lambertian&gt;(vec3(0.5, 0.5, 0.5))));
+
+    int i = 1;
+    for (int a = -11; a &lt; 11; a++) {
+        for (int b = -11; b &lt; 11; b++) {
+            auto choose_mat = random_double();
+            vec3 center(a + 0.9*random_double(), 0.2, b + 0.9*random_double());
+            if ((center - vec3(4, 0.2, 0)).length() &gt; 0.9) {
+                if (choose_mat &lt; 0.8) {
+                    // diffuse
+                    auto albedo = vec3::random() * vec3::random();
+                    world.add(
+                        make_shared&lt;sphere&gt;(center, 0.2, make_shared&lt;lambertian&gt;(albedo)));
+                } else if (choose_mat &lt; 0.95) {
+                    // metal
+                    auto albedo = vec3::random(.5, 1);
+                    auto fuzz = random_double(0, .5);
+                    world.add(
+                        make_shared&lt;sphere&gt;(center, 0.2, make_shared&lt;metal&gt;(albedo, fuzz)));
+                } else {
+                    // glass
+                    world.add(make_shared&lt;sphere&gt;(center, 0.2, make_shared&lt;dielectric&gt;(1.5)));
+                }
+            }
+        }
+    }
+
+    world.add(make_shared&lt;sphere&gt;(vec3(0, 1, 0), 1.0, make_shared&lt;dielectric&gt;(1.5)));
+
+    world.add(
+        make_shared&lt;sphere&gt;(vec3(-4, 1, 0), 1.0, make_shared&lt;lambertian&gt;(vec3(0.4, 0.2, 0.1))));
+
+    world.add(
+        make_shared&lt;sphere&gt;(vec3(4, 1, 0), 1.0, make_shared&lt;metal&gt;(vec3(0.7, 0.6, 0.5), 0.0)));
+
+    return world;
+}
+
+int main() {
+    ...
+    auto world = random_scene();
+
+    vec3 lookfrom(13,2,3);
+    vec3 lookat(0,0,0);
+    vec3 vup(0,1,0);
+    auto dist_to_focus = 10.0;
+    auto aperture = 0.1;
+
+    camera cam(lookfrom, lookat, vup, 20, aspect_ratio, aperture, dist_to_focus);
+    ...
+}
+</code></pre>
+<p>Ce qui nous donne la scène finale suivante :</p>
+<p><img src="img/scene_finale.jpg" alt="Scène finale" /></p>
+<p>Un point intéressant à noter est que les sphères en verre n'ont apparemment pas d'ombre, ce qui donne l'impression qu'elles flottent dans l'air. Ce n'est pas un bug (vous ne voyez pas de sphères de verre souvent dans la réalité, elles apparaissent pourtant de cette façon, sans ombre, notamment les jours nuageux). Un point sur la grande sphère sous une sphère de verre reçoit pourtant beaucoup de lumière.  C'est dû au fait que le ciel est ré-arrangé plutôt que bloqué.</p>
+<p>Vous avez maintenant un ray tracer cool ! Que faire-ensuite ?</p>
+<ol>
+<li>
+<p>Les lumières. Vous pouvez le faire explicitement, en envoyant des rayons d'ombre aux lumières. Ou ça peut être fait implicitement en faisant en sorte que des objets puissent émettre de la lumière.</p>
+</li>
+<li>
+<p>La polarisation a dispersé les rayons vers eux, puis la sous-pondération de ces rayons pour annuler le biais. Les deux fonctionnent. Je préfère cette dernière approche même si elle ne fait pas l'hunanimité.</p>
+</li>
+<li>
+<p>Les triangles. Les modèles chouettes sont composés de triangles. Le modèle d'I/O est le plus dur, et chacun essaye de copier le code de quelqu'un d'autre pour faire ça.</p>
+</li>
+<li>
+<p>Les textures de surface. Ca vous permet de coller des images sur vos modèles comme du papier-peint. Assez facile et un bon ajout à notre ray tracer.</p>
+</li>
+<li>
+<p>Des textures solides. Ken Perlin a son code en ligne. Andrew Kensler a pas mals d'informations intéressantes à ce sujet sur son blog.</p>
+</li>
+<li>
+<p>Gestion des volumes et media. Quelque chose de sympa et qui challengera votre architecture logicielle. Ma solution est de faire un volume qui a une interface <code>hittable</code> et de façon probabilistique, a ses intersections basées sur sa densité. Votre code de rendu n'a pas à savoir qu'il a des volumes avec cette méthode.</p>
+</li>
+<li>
+<p>Parallélisme. Lancer \(N\) copies de votre code sur \(N\) coeurs avec differentes graines aléatoires (<em>random seeds</em>). Moyenner les \(N\) lancements. La moyenne peut aussi se faire hierarchiquement où \(N/2\) paires pour obtenir \(N/4\) images, et ces paires peuvent ensuite être moyennées. Cette méthode de parallélisation devrait s'étendre bien à des machines équipées de milliers de coeurs et avec très peu de code.</p>
+</li>
+</ol>
+<p>Amusez-vous et envoyez-moi vos images sympas !</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="flou_de_focus.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
                         
-                            <a rel="next" href="creer_une_image.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="remerciements.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -187,9 +260,13 @@ Ca ne sera pas un moteur de rendu par lancé de rayons complet mais il sera capa
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a rel="prev" href="flou_de_focus.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
                 
-                    <a rel="next" href="creer_une_image.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="remerciements.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - Raytracing en un weekend</title>
+        <title>Matériaux diffus - Raytracing en un weekend</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -84,7 +84,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li><li class="chapter-item expanded "><a href="normale_surface_plusieurs_objets.html"><strong aria-hidden="true">5.</strong> Normale à une surface et plusieurs objets</a></li><li class="chapter-item expanded "><a href="antialiasing.html"><strong aria-hidden="true">6.</strong> Antialiasing</a></li><li class="chapter-item expanded "><a href="materiaux_diffus.html"><strong aria-hidden="true">7.</strong> Matériaux diffus</a></li><li class="chapter-item expanded "><a href="metal.html"><strong aria-hidden="true">8.</strong> Métal</a></li><li class="chapter-item expanded "><a href="dielectrique.html"><strong aria-hidden="true">9.</strong> Diélectrique</a></li><li class="chapter-item expanded "><a href="camera_positionnable.html"><strong aria-hidden="true">10.</strong> Caméra positionnable</a></li><li class="chapter-item expanded "><a href="flou_de_focus.html"><strong aria-hidden="true">11.</strong> Flou de focus</a></li><li class="chapter-item expanded "><a href="que_faire_ensuite.html"><strong aria-hidden="true">12.</strong> Que faire-ensuite</a></li><li class="chapter-item expanded "><a href="remerciements.html"><strong aria-hidden="true">13.</strong> Remerciements</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="creer_une_image.html"><strong aria-hidden="true">1.</strong> Créer une image</a></li><li class="chapter-item expanded "><a href="la_classe_vec3.html"><strong aria-hidden="true">2.</strong> La classe vec3</a></li><li class="chapter-item expanded "><a href="rayons_camera_arriere_plan.html"><strong aria-hidden="true">3.</strong> Des rayons, une caméra et un arrière-plan</a></li><li class="chapter-item expanded "><a href="ajouter_une_sphere.html"><strong aria-hidden="true">4.</strong> Ajouter une sphère</a></li><li class="chapter-item expanded "><a href="normale_surface_plusieurs_objets.html"><strong aria-hidden="true">5.</strong> Normale à une surface et plusieurs objets</a></li><li class="chapter-item expanded "><a href="antialiasing.html"><strong aria-hidden="true">6.</strong> Antialiasing</a></li><li class="chapter-item expanded "><a href="materiaux_diffus.html" class="active"><strong aria-hidden="true">7.</strong> Matériaux diffus</a></li><li class="chapter-item expanded "><a href="metal.html"><strong aria-hidden="true">8.</strong> Métal</a></li><li class="chapter-item expanded "><a href="dielectrique.html"><strong aria-hidden="true">9.</strong> Diélectrique</a></li><li class="chapter-item expanded "><a href="camera_positionnable.html"><strong aria-hidden="true">10.</strong> Caméra positionnable</a></li><li class="chapter-item expanded "><a href="flou_de_focus.html"><strong aria-hidden="true">11.</strong> Flou de focus</a></li><li class="chapter-item expanded "><a href="que_faire_ensuite.html"><strong aria-hidden="true">12.</strong> Que faire-ensuite</a></li><li class="chapter-item expanded "><a href="remerciements.html"><strong aria-hidden="true">13.</strong> Remerciements</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -150,32 +150,20 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#introduction" id="introduction">Introduction</a></h1>
-<blockquote>
-<p>Ce site est une traduction de l'excellente série de livres sur le raytracing de Peter Shirley. Le ray tracing, ou lancer de rayons en français, est une technique de calcul d'optique par ordinateur, notamment utilisée pour le rendu d'image de synthèse (source : <a href="https://fr.wikipedia.org/wiki/Ray_tracing">Wikipedia</a>). Cette traduction est rendue possible grâce au choix de l'auteur de publier ses écrits sous license permissive CC0 (anciennement payants).</p>
-</blockquote>
-<p><img src="img/cover.jpg" alt="Couverture" /></p>
-<h1><a class="header" href="#point-de-départ" id="point-de-départ">Point de départ</a></h1>
-<p>J'ai enseigné pendant plusieurs années la programmation à destination de l'image. Souvent, j'enseigne le ray tracing (lancé de rayons), parce que vous êtes obligé d'écrire tout le code mais vous pouvez quand même obtenir des images super cools. J'ai décidé d'adapter mes notes de cours en manuel, pour que vous puissiez réaliser un programme cool, aussi vite que possible.
-Ca ne sera pas un moteur de rendu par lancé de rayons complet mais il sera capable d'illumination indirecte, ce qui a permis aux films de gagner en réalisme. Suivez ces étapes, et l'architecture du ray tracer que vous allez produire sera suffisante pour que vous puissiez construire un ray tracer plus complet par la suite.</p>
-<p>Quand quelqu'un parle de &quot;ray tracing&quot;, ça peut vouloir dire plusieurs choses. Ce que je m'aprête à décrire est techniquellement un &quot;path tracer&quot; assez général. Alors que le code que vous allez écrire est très simple (laissons l'ordinateur faire le travail !), je pense que vous serez très satisfait des images que vous pourrez créer avec.</p>
-<p>Je vais vous expliquer comme coder un ray tracer dans l'ordre auquel j'ai été habitué à le faire, ainsi que quelques conseils de débogage. A la fin, vous aurez un ray tracer qui produira de belles images. Vous serez capable de faire ça normalement en un weekend. Si ça vous prend plus de temps, ne vous en faites pas. J'utilise le C++ comme langage de programmation, mais vous n'avez pas besoin de faire pareil. Cependant, je vous suggère de le faire, parce que le C++ est rapide, portable et que la plupart des moteurs de rendu de films et jeux vidéos sont écrits en C++. Notez que j'éviterai d'utiliser les fonctionnalités modernes du C++, mais l'héritage et la surcharge d'opérateur sont trop utiles aux ray tracers pour passer outre. Je montre tout le code utilisé, excepté pour quelques calculs très simples pour la classe <code>vec3</code>. Je crois beaucoup au dicton &quot;c'est en faisant que l'on apprend&quot;.</p>
-<p>L'intégralité du code source est disponible ici :
-<a href="https://github.com/RayTracing/raytracing.github.io/">https://github.com/RayTracing/raytracing.github.io/</a>.</p>
-<p>Je suppose que vous êtes un peu familier avec les vecteurs (comme le produit scalaire et l'addition de deux vecteurs). Si vous n'y connaissez rien, faites quelques recherches avant de poursuivre.</p>
-<p>Peter Shirley, edited by Steve Hollasch and Trevor David Black</p>
-<p>Version 3.0.1, 2020-03-31</p>
-<p>Copyright 2018-2020 Peter Shirley. All rights reserved.</p>
-<p>Traduction française par Hugues Gaillard.</p>
+                        <h1><a class="header" href="#matériaux-diffus" id="matériaux-diffus">Matériaux diffus</a></h1>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
+                            <a rel="prev" href="antialiasing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
 
                         
-                            <a rel="next" href="creer_une_image.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="metal.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -187,9 +175,13 @@ Ca ne sera pas un moteur de rendu par lancé de rayons complet mais il sera capa
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
+                    <a rel="prev" href="antialiasing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
 
                 
-                    <a rel="next" href="creer_une_image.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="metal.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
